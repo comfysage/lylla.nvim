@@ -6,6 +6,7 @@
 ---@field prefix string
 ---@field hls table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
 ---@field modules any[]
+---@field winbar any[]
 
 local utils = require("lylla.utils")
 
@@ -43,7 +44,7 @@ M.default = {
   hls = {},
   modules = {
     component(function()
-      local prefix = require('lylla.config').get().prefix
+      local prefix = require("lylla.config").get().prefix
       local modehl = utils.get_modehl()
       return {
         { prefix, modehl },
@@ -90,6 +91,37 @@ M.default = {
     { "%l:%c" },
     { " " },
   },
+  winbar = {
+    component(function()
+      local prefix = require("lylla.config").get().prefix
+      local modehl = utils.get_modehl()
+      return {
+        { prefix, modehl },
+      }
+    end, {
+      events = { "ModeChanged", "CmdlineEnter" },
+    }),
+    { " " },
+    component(function()
+      return {
+        utils.getfilepath(),
+        utils.getfilename(),
+        { " " },
+      }
+    end, {
+      events = {
+        "WinEnter",
+        "BufEnter",
+        "BufWritePost",
+        "FileChangedShellPost",
+        "Filetype",
+      },
+    }),
+    { " " },
+    component(function()
+      return { utils.get_searchcount() }
+    end),
+  },
 }
 
 ---@type lylla.config
@@ -118,7 +150,7 @@ local function tmerge(tdefault, toverride)
       tnew[k] = v
       return tnew
     end
-    if type(v) == 'table' then
+    if type(v) == "table" then
       tnew[k] = tmerge(v, toverride[k])
       return tnew
     end
@@ -132,8 +164,9 @@ end
 ---@param toverride lylla.config
 ---@return lylla.config
 function M.merge(tdefault, toverride)
-  if vim.fn.has('nvim-0.11.0') == 1 then
-    toverride = vim.tbl_deep_extend('keep', toverride, { editor = { float = { solid_border = vim.o.winborder == 'solid' } } })
+  if vim.fn.has("nvim-0.11.0") == 1 then
+    toverride =
+      vim.tbl_deep_extend("keep", toverride, { editor = { float = { solid_border = vim.o.winborder == "solid" } } })
   end
   return tmerge(tdefault, toverride)
 end
@@ -146,7 +179,7 @@ end
 ---@param cfg lylla.config
 ---@return lylla.config
 function M.override(cfg)
-  return M.merge( M.default, cfg)
+  return M.merge(M.default, cfg)
 end
 
 ---@param cfg lylla.config
