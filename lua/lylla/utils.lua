@@ -112,26 +112,14 @@ function utils.get_searchcount()
 end
 
 function utils.get_fmt()
-  local filetype = vim.bo.filetype
-  if not filetype then
-    return
-  end
-  local formatters = require("mossy.filetype").get(filetype, "formatting")
-  if #formatters == 0 then
-    return
-  end
-
-  local fmt = vim.iter(formatters):find(function(formatter)
-    if formatter.cond and not formatter.cond({ buf = 0 }) then
-      return false
+  local formatters = require("mossy").get()
+  return vim.iter(ipairs(formatters)):fold("", function(str, i, formatter)
+    if i == 1 then
+      return formatter.name
     end
 
-    if formatter.cmd and vim.fn.executable(formatter.cmd) == 0 then
-      return false
-    end
-    return true
+    return str .. " 󰧟 " .. formatter.name
   end)
-  return fmt and fmt.name or nil
 end
 
 ---@param mode string
