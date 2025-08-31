@@ -39,12 +39,10 @@ function M.init()
     callback = function()
       local win = vim.api.nvim_get_current_win()
       require("lylla.statusline"):new(win):init()
-      require("lylla.winbar"):new(win):init()
     end,
   })
   local win = vim.api.nvim_get_current_win()
   require("lylla.statusline"):new(win):init()
-  require("lylla.winbar"):new(win):init()
 
   vim.api.nvim_create_autocmd("WinClosed", {
     group = vim.api.nvim_create_augroup("lylla:close", { clear = true }),
@@ -52,10 +50,6 @@ function M.init()
       local stl = require("lylla.statusline").wins[ev.match]
       if stl then
         stl:close()
-      end
-      local wbar = require("lylla.winbar").wins[ev.match]
-      if wbar then
-        wbar:close()
       end
     end,
   })

@@ -4,6 +4,7 @@ local utils = require("lylla.utils")
 ---@field wins table<integer, table>
 ---@field win integer
 ---@field modules any[]
+---@field winbar any[]
 ---@field timer uv.uv_timer_t
 ---@field refreshau integer
 local statusline = {}
@@ -19,6 +20,7 @@ function statusline:new(win)
   local stl = setmetatable({
     win = win,
     modules = vim.deepcopy(require("lylla.config").get().modules, true),
+    winbar = vim.deepcopy(require("lylla.config").get().winbar, true),
   }, { __index = statusline })
   statusline.wins[win] = stl
   return stl
@@ -61,31 +63,21 @@ end
 ---@field refresh fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:refresh(ev)
   vim.schedule(function()
-    if vim.o.cmdheight == 0 and vim.api.nvim_get_mode().mode == "c" then
-      return
-    end
-
     if not vim.api.nvim_win_is_valid(self.win) then
       return
     end
 
-    local ok, result = pcall(vim.api.nvim_win_call, self.win, function()
-      return self:get(ev)
-    end)
-    if not ok then
-      return
-    end
-
-    vim.wo[self.win].statusline = result
+    self:set(ev)
+    self:setwinbar(ev)
   end)
 end
 
 ---@class lylla.proto
----@field fold fun(self, ev?: vim.api.keyset.create_autocmd.callback_args): string
-function statusline:fold(ev)
-  local modules = vim
-    .iter(ipairs(self.modules))
-    :map(function(i, module)
+---@field fold fun(self, ev?: vim.api.keyset.create_autocmd.callback_args, modules: any[]): string
+function statusline:fold(ev, modules)
+  local lst = vim
+    .iter(ipairs(modules))
+    :map(function(_, module)
       if type(module) == "table" and module._type == "component" then
         if module.opts and module.opts.events then
           -- refresh from timer
@@ -106,8 +98,8 @@ function statusline:fold(ev)
       return module
     end)
     :totable()
-  modules = utils.flatten(modules, 1)
-  return vim.iter(modules):fold("", function(str, module)
+  lst = utils.flatten(lst, 1)
+  return vim.iter(lst):fold("", function(str, module)
     if type(module) ~= "table" or #module == 0 then
       return str
     end
@@ -122,7 +114,44 @@ end
 ---@class lylla.proto
 ---@field get fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:get(ev)
-  return self:fold(ev)
+  return self:fold(ev, self.modules)
+end
+
+---@class lylla.proto
+---@field getwinbar fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
+function statusline:getwinbar(ev)
+  return self:fold(ev, self.winbar)
+end
+
+---@class lylla.proto
+---@field setwinbar fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
+function statusline:setwinbar(ev)
+  local buf = vim.api.nvim_win_get_buf(self.win)
+  if vim.bo[buf].buftype ~= "" then
+    return
+  end
+
+  local ok, result = pcall(vim.api.nvim_win_call, self.win, function()
+    return self:getwinbar(ev)
+  end)
+  if not ok then
+    return
+  end
+
+  vim.wo[self.win].winbar = result
+end
+
+---@class lylla.proto
+---@field set fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
+function statusline:set(ev)
+  local ok, result = pcall(vim.api.nvim_win_call, self.win, function()
+    return self:get(ev)
+  end)
+  if not ok then
+    return
+  end
+
+  vim.wo[self.win].statusline = result
 end
 
 return statusline
