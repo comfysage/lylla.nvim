@@ -8,6 +8,13 @@ local default_hls = {
   insert = { link = "MiniIconsGrey" },
 }
 
+---@param cfg? lylla.config
+function M.setup(cfg)
+  cfg = cfg or {}
+  local config = require("lylla.config")
+  config.set(config.override(cfg))
+end
+
 function M.inithls()
   local utils = require("lylla.utils")
   vim.iter(pairs(default_hls)):each(function(mode, defaulthl)

@@ -1,3 +1,4 @@
+local log = require("lylla.log")
 local utils = require("lylla.utils")
 
 ---@class lylla.proto
@@ -59,6 +60,15 @@ function statusline:close()
   statusline.wins[self.win] = nil
 end
 
+local function refreshcomponent(self, fn, ev)
+  do
+    local ok, result = pcall(fn, self, ev)
+    if not ok then
+      log.error("[lylla] error occured on refresh:\n\t" .. result)
+    end
+  end
+end
+
 ---@class lylla.proto
 ---@field refresh fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:refresh(ev)
@@ -67,18 +77,22 @@ function statusline:refresh(ev)
       return
     end
 
-    self:set(ev)
-    self:setwinbar(ev)
+    refreshcomponent(self, statusline.set, ev)
+    refreshcomponent(self, statusline.setwinbar, ev)
   end)
 end
 
 ---@class lylla.proto
 ---@field fold fun(self, ev?: vim.api.keyset.create_autocmd.callback_args, modules: any[]): string
 function statusline:fold(ev, modules)
+  if type(modules) ~= "table" or modules == nil then
+    return ""
+  end
+
   local lst = vim
     .iter(ipairs(modules))
     :map(function(_, module)
-      if type(module) == "table" and module._type == "component" then
+      if type(module) == "table" and module.fn and type(module.fn) == "function" then
         if module.opts and module.opts.events then
           -- refresh from timer
           if not ev and module.prev then
@@ -89,23 +103,40 @@ function statusline:fold(ev, modules)
             return module.prev
           end
         end
-        module.prev = module.fn()
+        do
+          local ok, result = pcall(module.fn)
+          if not ok then
+            error(result)
+          end
+          module.prev = result
+        end
         return module.prev
       end
       if type(module) == "function" then
-        module = module()
+        local ok, result = pcall(module)
+        if not ok then
+          error(result)
+        end
+        return result
       end
       return module
     end)
     :totable()
   lst = utils.flatten(lst, 1)
   return vim.iter(lst):fold("", function(str, module)
+    if type(module) == "string" and #module > 0 then
+      return str .. module
+    end
     if type(module) ~= "table" or #module == 0 then
       return str
     end
     local text = module[1]
-    if #module > 1 then
-      return str .. "%#" .. module[2] .. "#" .. text .. "%*"
+    if text == nil or type(text) ~= "string" or #text == 0 then
+      return str
+    end
+    local hl = module[2]
+    if hl and type(hl) == "string" and #hl > 0 then
+      return str .. "%#" .. hl .. "#" .. text .. "%*"
     end
     return str .. "%*" .. text
   end)
@@ -134,9 +165,7 @@ function statusline:setwinbar(ev)
   local ok, result = pcall(vim.api.nvim_win_call, self.win, function()
     return self:getwinbar(ev)
   end)
-  if not ok then
-    return
-  end
+  assert(ok, string.format("error occured while trying to evaluate winbar:\n\t%s", result))
 
   vim.wo[self.win].winbar = result
 end
@@ -147,9 +176,7 @@ function statusline:set(ev)
   local ok, result = pcall(vim.api.nvim_win_call, self.win, function()
     return self:get(ev)
   end)
-  if not ok then
-    return
-  end
+  assert(ok, string.format("error occured while trying to evaluate statusline:\n\t%s", result))
 
   vim.wo[self.win].statusline = result
 end

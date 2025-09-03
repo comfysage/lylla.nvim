@@ -1,26 +1,19 @@
 ---@module 'lylla.config'
 
+---@class lylla.item
+---@field fn fun(): any
+---@field opts? { events?: string[] }
+
+---@alias lylla.item.tuple {[1]: string, [2]?: string}
+
 ---@class lylla.config
 ---@field refresh_rate integer
 ---@field events string[]
----@field prefix string
 ---@field hls table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
----@field modules any[]
+---@field modules (lylla.item|lylla.item.tuple|string)[]
 ---@field winbar any[]
 
-local utils = require("lylla.utils")
-
 local M = {}
-
----@param fn fun(): string[]
----@param opts? { events: string[] }
----@return table
-local function component(fn, opts)
-  local t = { _type = "component" }
-  t.fn = fn
-  t.opts = opts
-  return t
-end
 
 ---@type lylla.config
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
@@ -40,88 +33,62 @@ M.default = {
     "ModeChanged",
     "CmdlineEnter",
   },
-  prefix = "▌",
   hls = {},
   modules = {
-    component(function()
-      local prefix = require("lylla.config").get().prefix
-      local modehl = utils.get_modehl()
-      return {
-        { prefix, modehl },
-        { "[" .. vim.api.nvim_get_mode().mode .. "]", modehl },
-      }
-    end, {
-      events = { "ModeChanged", "CmdlineEnter" },
-    }),
+    "%<%f %h%w%m%r",
+    "%=",
+    {
+      fn = function()
+        if vim.o.showcmdloc == "statusline" then
+          return "%-10.S"
+        end
+        return ""
+      end,
+    },
     { " " },
-    component(function()
-      return {
-        utils.getfilepath(),
-        utils.getfilename(),
-        { " " },
-      }
-    end, {
-      events = {
-        "WinEnter",
-        "BufEnter",
-        "BufWritePost",
-        "FileChangedShellPost",
-        "Filetype",
+    {
+      fn = function()
+        if not vim.b.keymap_name then
+          return ""
+        end
+        return "<" .. vim.b.keymap_name .. ">"
+      end,
+    },
+    { " " },
+    {
+      fn = function()
+        if vim.bo.busy > 0 then
+          return "◐ "
+        end
+        return ""
+      end,
+    },
+    { " " },
+    {
+      fn = function()
+        if not package.loaded["vim.diagnostic"] then
+          return ""
+        end
+        return vim.diagnostic.status()
+      end,
+      opts = {
+        events = { "DiagnosticChanged" },
       },
-    }),
+    },
     { " " },
-    component(function()
-      return { utils.get_searchcount() }
-    end),
-    { "%=" },
-    {},
-    { "%=" },
-    component(function()
-      return {
-        { { "lsp :: " }, { utils.get_client() or "none" } },
-        { " | ", "NonText" },
-        { { "fmt :: " }, { utils.get_fmt() or "none" } },
-        { " | ", "NonText" },
-      }
-    end, { events = { "FileType" } }),
-    { "%p%%" },
-    { " | ", "NonText" },
-    { "%L lines" },
-    { " | ", "NonText" },
-    { "%l:%c" },
-    { " " },
+    {
+      fn = function()
+        if not vim.o.ruler then
+          return ""
+        end
+        if vim.o.rulerformat == "" then
+          return "%-14.(%l,%c%V%) %P"
+        end
+        return vim.o.rulerformat
+      end,
+    },
   },
-  winbar = {
-    component(function()
-      local prefix = require("lylla.config").get().prefix
-      local modehl = utils.get_modehl()
-      return {
-        { prefix, modehl },
-      }
-    end, {
-      events = { "ModeChanged", "CmdlineEnter" },
-    }),
-    { " " },
-    component(function()
-      return {
-        utils.getfilepath(),
-        utils.getfilename(),
-        { " " },
-      }
-    end, {
-      events = {
-        "WinEnter",
-        "BufEnter",
-        "BufWritePost",
-        "FileChangedShellPost",
-        "Filetype",
-      },
-    }),
-    { " " },
-    component(function()
-      return { utils.get_searchcount() }
-    end),
-  },
+  winbar = {},
 }
 
 ---@type lylla.config

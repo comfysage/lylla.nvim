@@ -111,17 +111,6 @@ function utils.get_searchcount()
   return { { string.format("/%s", term), "IncSearch" }, { " " }, { display, "MsgSeparator" } }
 end
 
-function utils.get_fmt()
-  local formatters = require("mossy").get()
-  return vim.iter(ipairs(formatters)):fold("", function(str, i, formatter)
-    if i == 1 then
-      return formatter.name
-    end
-
-    return str .. " 󰧟 " .. formatter.name
-  end)
-end
-
 ---@param mode string
 ---@return string
 function utils.get_modehl_name(mode)
