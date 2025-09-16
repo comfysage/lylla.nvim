@@ -87,4 +87,16 @@ function M.init()
   M.inithls()
 end
 
+-- helpers
+
+---@param fn fun(): string|any[]
+---@param opts? { events: string[] }
+---@return table
+function M.component(fn, opts)
+  local t = {}
+  t.fn = fn
+  t.opts = opts
+  return t
+end
+
 return M
