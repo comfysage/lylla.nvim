@@ -1,5 +1,19 @@
 local M = {}
 
+local lzrq = function(modname)
+  return setmetatable({
+    modname = modname,
+  }, {
+    __index = function(t, k)
+      local m = rawget(t, "modname")
+      return m and require(m)[k] or nil
+    end,
+  })
+end
+
+local config = lzrq("lylla.config")
+local utils = lzrq("lylla.utils")
+
 ---@type table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
 local default_hls = {
   normal = { link = "MiniIconsAzure" },
@@ -11,16 +25,14 @@ local default_hls = {
 ---@param cfg? lylla.config
 function M.setup(cfg)
   cfg = cfg or {}
-  local config = require("lylla.config")
   config.set(config.override(cfg))
 end
 
 function M.inithls()
-  local utils = require("lylla.utils")
   vim.iter(pairs(default_hls)):each(function(mode, defaulthl)
     local name = utils.get_modehl_name(mode)
 
-    local hl = require("lylla.config").get().hls[mode]
+    local hl = config.get().hls[mode]
     if hl then
       vim.api.nvim_set_hl(0, name, hl)
       return
@@ -33,7 +45,6 @@ function M.inithls()
 end
 
 function M.resethl()
-  local utils = require("lylla.utils")
   vim.iter(pairs(default_hls)):each(function(mode, _)
     local name = utils.get_modehl_name(mode)
     vim.api.nvim_set_hl(0, name, {})
