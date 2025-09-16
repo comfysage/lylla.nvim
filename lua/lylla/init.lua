@@ -16,10 +16,10 @@ local utils = lzrq("lylla.utils")
 
 ---@type table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
 local default_hls = {
-  normal = { link = "MiniIconsAzure" },
-  visual = { link = "MiniIconsPurple" },
-  command = { link = "MiniIconsOrange" },
-  insert = { link = "MiniIconsGrey" },
+  normal = { link = "@property" },
+  visual = { link = "@constant" },
+  command = { link = "@function" },
+  insert = { link = "@variable" },
 }
 
 ---@param cfg? lylla.config
