@@ -51,7 +51,15 @@ function M.resethl()
   end)
 end
 
+M.initialized = false
+
 function M.init()
+  if M.initialized then
+    return
+  end
+
+  M.initialized = true
+
   vim.api.nvim_create_autocmd({ "UIEnter", "WinNew", "WinEnter" }, {
     group = vim.api.nvim_create_augroup("lylla:win", { clear = true }),
     callback = function()
