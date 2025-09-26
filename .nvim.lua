@@ -7,10 +7,4 @@ vim.opt.rtp:prepend(".")
 
 --
 
-vim.api.nvim_create_autocmd("UIEnter", {
-  callback = function()
-    pcall(function()
-      R("lylla")
-    end)
-  end,
-})
+R("lylla.init")
