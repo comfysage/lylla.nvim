@@ -46,19 +46,6 @@ the default configuration is as follows:
 ```lua
 require("lylla").setup({
   refresh_rate = 300,
-  events = {
-    "WinEnter",
-    "BufEnter",
-    "BufWritePost",
-    "SessionLoadPost",
-    "FileChangedShellPost",
-    "VimResized",
-    "Filetype",
-    "CursorMoved",
-    "CursorMovedI",
-    "ModeChanged",
-    "CmdlineEnter",
-  },
   hls = {},
   modules = {
     "%<%f %h%w%m%r",

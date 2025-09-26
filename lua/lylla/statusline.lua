@@ -43,12 +43,18 @@ function statusline:init()
     self:refresh()
   end)
 
-  self.refreshau = vim.api.nvim_create_autocmd(require("lylla.config").get().events, {
-    group = vim.api.nvim_create_augroup("lylla:refresh", { clear = false }),
-    callback = function(ev)
-      self:refresh(ev)
-    end,
-  })
+  self.refreshau = vim.api.nvim_create_augroup(("lylla:refresh[%d]"):format(self.win), { clear = true })
+
+  local events = self:getevents()
+
+  for i = 1, #events do
+    vim.api.nvim_create_autocmd(events[i], {
+      group = self.refreshau,
+      callback = function(ev)
+        self:refresh(ev)
+      end,
+    })
+  end
 end
 
 ---@class lylla.proto
@@ -56,8 +62,26 @@ end
 function statusline:close()
   self.timer:stop()
   self.timer:close()
-  vim.api.nvim_del_autocmd(self.refreshau)
+  pcall(vim.api.nvim_del_augroup_by_id, self.refreshau)
   statusline.wins[self.win] = nil
+end
+
+---@class lylla.proto
+---@field getevents fun(self): string[]
+function statusline:getevents()
+  local t = vim.iter(ipairs(self.modules)):fold({}, function(acc, _, module)
+    if type(module) == "table" and module.fn and type(module.fn) == "function" then
+      if module.opts and module.opts.events then
+        return vim.iter(module.opts.events):fold(acc, function(a, event)
+          a[event] = true
+          return a
+        end)
+      end
+    end
+    return acc
+  end)
+
+  return vim.tbl_keys(t)
 end
 
 local function refreshcomponent(self, fn, ev)

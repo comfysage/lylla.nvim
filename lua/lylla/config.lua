@@ -8,7 +8,6 @@
 
 ---@class lylla.config
 ---@field refresh_rate integer
----@field events string[]
 ---@field hls table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
 ---@field modules (lylla.item|lylla.item.tuple|string)[]
 ---@field winbar any[]
@@ -20,19 +19,6 @@ local M = {}
 ---@text # Default ~
 M.default = {
   refresh_rate = 300,
-  events = {
-    "WinEnter",
-    "BufEnter",
-    "BufWritePost",
-    "SessionLoadPost",
-    "FileChangedShellPost",
-    "VimResized",
-    "Filetype",
-    "CursorMoved",
-    "CursorMovedI",
-    "ModeChanged",
-    "CmdlineEnter",
-  },
   hls = {},
   modules = {
     "%<%f %h%w%m%r",
