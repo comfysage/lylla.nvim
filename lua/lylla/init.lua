@@ -52,15 +52,15 @@ function M.resethl()
 end
 
 function M.init()
-  vim.api.nvim_create_autocmd("WinNew", {
-    group = vim.api.nvim_create_augroup("lylla:win:new", { clear = true }),
+  vim.api.nvim_create_autocmd({ "UIEnter", "WinNew", "WinEnter" }, {
+    group = vim.api.nvim_create_augroup("lylla:win", { clear = true }),
     callback = function()
       local win = vim.api.nvim_get_current_win()
-      require("lylla.statusline"):new(win):init()
+      if not require("lylla.statusline").wins[win] then
+        require("lylla.statusline"):new(win):init()
+      end
     end,
   })
-  local win = vim.api.nvim_get_current_win()
-  require("lylla.statusline"):new(win):init()
 
   vim.api.nvim_create_autocmd("WinClosed", {
     group = vim.api.nvim_create_augroup("lylla:close", { clear = true }),
