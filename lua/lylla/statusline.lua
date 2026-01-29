@@ -48,8 +48,11 @@ function statusline:init()
   local events = self:getevents()
 
   for i = 1, #events do
-    vim.api.nvim_create_autocmd(events[i], {
+    local event = events[i]
+    local eventname, eventpattern = unpack(vim.split(event, " "), 1, 2)
+    vim.api.nvim_create_autocmd(eventname, {
       group = self.refreshau,
+      pattern = eventpattern,
       callback = function(ev)
         self:refresh(ev)
       end,
