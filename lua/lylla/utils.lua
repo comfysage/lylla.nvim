@@ -121,19 +121,19 @@ end
 function utils.get_modehl()
   local mode = vim.api.nvim_get_mode().mode
 
-  if string.match(mode, "n") then
+  if string.match(mode, "^n") then
     return utils.get_modehl_name("normal")
   end
 
-  if string.match(mode, "[vVs]") then
+  if string.match(mode, "^[vVs]") then
     return utils.get_modehl_name("visual")
   end
 
-  if string.match(mode, "c") then
+  if string.match(mode, "^c") then
     return utils.get_modehl_name("command")
   end
 
-  if string.match(mode, "[irRt]") then
+  if string.match(mode, "^[irRt]") then
     return utils.get_modehl_name("insert")
   end
 
