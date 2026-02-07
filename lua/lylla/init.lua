@@ -80,6 +80,10 @@ function M.init()
     end,
   })
 
+  if config.get().tabline ~= vim.NIL then
+    require("lylla.tabline").setup()
+  end
+
   vim.api.nvim_create_autocmd("ColorSchemePre", {
     group = vim.api.nvim_create_augroup("lylla:resethl", { clear = true }),
     callback = function()
