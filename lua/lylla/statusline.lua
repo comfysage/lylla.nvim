@@ -149,24 +149,7 @@ function statusline:fold(ev, modules)
       return module
     end)
     :totable()
-  lst = utils.flatten(lst, 1)
-  return vim.iter(lst):fold("", function(str, module)
-    if type(module) == "string" and #module > 0 then
-      return str .. module
-    end
-    if type(module) ~= "table" or #module == 0 then
-      return str
-    end
-    local text = module[1]
-    if text == nil or type(text) ~= "string" or #text == 0 then
-      return str
-    end
-    local hl = module[2]
-    if hl and type(hl) == "string" and #hl > 0 then
-      return str .. "%#" .. hl .. "#" .. text .. "%*"
-    end
-    return str .. "%*" .. text
-  end)
+  return utils.fold(lst)
 end
 
 ---@class lylla.proto

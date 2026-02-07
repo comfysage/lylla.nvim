@@ -18,11 +18,14 @@ end
 ---@param lst table
 ---@param maxdepth integer
 function utils.flatten(lst, maxdepth)
+  vim.validate("lst", lst, "table")
+  vim.validate("maxdepth", maxdepth, "number")
+
   ---@param _t any[]
   ---@return integer
   local function _depth(_t)
-    return vim.iter(_t):fold(1, function(maxd, v)
-      if type(v) == "table" then
+    return vim.iter(ipairs(_t)):fold(1, function(maxd, _, v)
+      if type(v) == "table" and vim.islist(v) then
         local d = 1 + _depth(v)
         if d > maxd then
           return d
@@ -38,7 +41,7 @@ function utils.flatten(lst, maxdepth)
     local n = #_t
     for i = 1, n do
       local v = _t[i]
-      if type(v) ~= "table" or _depth(v) <= maxdepth then
+      if type(v) ~= "table" or (not vim.islist(v)) or _depth(v) <= maxdepth then
         table.insert(result, v)
       else
         _flatten(v)
@@ -47,6 +50,39 @@ function utils.flatten(lst, maxdepth)
   end
   _flatten(lst)
   return result
+end
+
+function utils.fold(lst)
+  vim.validate("lst", lst, "table")
+
+  lst = utils.flatten(lst, 1)
+  return vim.iter(ipairs(lst)):fold("", function(str, _, module)
+    if type(module) == "string" and #module > 0 then
+      return str .. module
+    end
+    if type(module) ~= "table" or #module == 0 then
+      return str
+    end
+    local text = module[1]
+    if text == nil or type(text) ~= "string" or #text == 0 then
+      return str
+    end
+    local hl = module[2]
+    if not hl then
+      return string.format("%s%%*%s", str, text)
+    end
+    if type(hl) == "string" and #hl > 0 then
+      return string.format("%s%%#%s#%s%%*", str, hl, text)
+    elseif type(hl) == "table" and (hl.fg or hl.bg or hl.link) then
+      local hl_name = string.format("@lylla.%s", vim.fn.sha256(vim.inspect(hl)))
+      vim.schedule(function()
+        vim.api.nvim_set_hl(0, hl_name, hl)
+      end)
+      return string.format("%s%%#%s#%s%%*", str, hl_name, text)
+    end
+
+    return string.format("%s%%*%s", str, text)
+  end)
 end
 
 function utils.getfilename()
