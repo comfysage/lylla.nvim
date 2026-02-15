@@ -52,15 +52,43 @@ function utils.flatten(lst, maxdepth)
   return result
 end
 
+local sfmt = "%s%%*%s"
+local sfmt_inherit = "%s%s"
+-- str, hl_name, text
+local hlfmt = "%s%%#%s#%s"
+local hlfmt_inherit = "%s%%$%s$%s"
+
+---@param str string
+---@param text string
+---@param inherit boolean
+---@param hl? string
+---@return string
+local function strfmt(str, text, inherit, hl)
+  if hl then
+    return string.format(inherit and hlfmt_inherit or hlfmt, str, hl, text)
+  end
+  return string.format(inherit and sfmt_inherit or sfmt, str, text)
+end
+
 function utils.fold(lst)
   vim.validate("lst", lst, "table")
 
   lst = utils.flatten(lst, 1)
+  ---@type string|false
+  local section = false
   return vim.iter(ipairs(lst)):fold("", function(str, _, module)
+    local inherit = not not section
     if type(module) == "string" and #module > 0 then
-      return str .. module
+      return strfmt(str, module, inherit)
     end
-    if type(module) ~= "table" or #module == 0 then
+    if type(module) ~= "table" then
+      return str
+    end
+    if module.section ~= nil and (type(module.section) == "string" or module.section == false) then
+      section = module.section
+      if section then
+        return string.format("%s%%#%s#", str, module.section)
+      end
       return str
     end
     local text = module[1]
@@ -69,20 +97,50 @@ function utils.fold(lst)
     end
     local hl = module[2]
     if not hl then
-      return string.format("%s%%*%s", str, text)
+      return strfmt(str, text, inherit)
     end
     if type(hl) == "string" and #hl > 0 then
-      return string.format("%s%%#%s#%s%%*", str, hl, text)
+      return strfmt(str, text, inherit, hl)
     elseif type(hl) == "table" and (hl.fg or hl.bg or hl.link) then
-      local hl_name = string.format("@lylla.%s", vim.fn.sha256(vim.inspect(hl)))
-      vim.schedule(function()
-        vim.api.nvim_set_hl(0, hl_name, hl)
-      end)
-      return string.format("%s%%#%s#%s%%*", str, hl_name, text)
+      inherit = inherit or hl.inherit
+      hl.inherit = nil
+      local hl_name = hl.link
+      if not hl_name then
+        hl_name = utils.create_hl(hl)
+      end
+      return strfmt(str, text, inherit, hl_name)
+    elseif type(hl) == "table" and hl.inherit then
+      return strfmt(str, text, true)
     end
 
-    return string.format("%s%%*%s", str, text)
+    return strfmt(str, text, inherit)
   end)
+end
+
+---@param hl_name string
+---@return vim.api.keyset.highlight
+function utils.reverse_hl(hl_name)
+  local hl = vim.api.nvim_get_hl(0, { name = hl_name })
+  if vim.tbl_isempty(hl) or (not hl.fg and not hl.bg and not hl.link) then
+    return {}
+  end
+  if hl.link then
+    return utils.reverse_hl(hl.link)
+  end
+  local rev = vim.deepcopy(hl)
+  rev.fg = hl.bg
+  rev.bg = hl.fg
+  ---@diagnostic disable-next-line: return-type-mismatch
+  return rev
+end
+
+---@param hl vim.api.keyset.highlight
+function utils.create_hl(hl)
+  local hl_name = string.format("@lylla.%s", vim.fn.sha256(vim.inspect(hl)))
+  vim.schedule(function()
+    vim.api.nvim_set_hl(0, hl_name, hl)
+  end)
+  return hl_name
 end
 
 function utils.getfilename()
@@ -156,24 +214,17 @@ end
 ---@return string
 function utils.get_modehl()
   local mode = vim.api.nvim_get_mode().mode
-
-  if string.match(mode, "^n") then
-    return utils.get_modehl_name("normal")
-  end
+  local hl_name = utils.get_modehl_name("normal")
 
   if string.match(mode, "^[vVs]") then
-    return utils.get_modehl_name("visual")
+    hl_name = utils.get_modehl_name("visual")
+  elseif string.match(mode, "^c") then
+    hl_name = utils.get_modehl_name("command")
+  elseif string.match(mode, "^[irRt]") then
+    hl_name = utils.get_modehl_name("insert")
   end
 
-  if string.match(mode, "^c") then
-    return utils.get_modehl_name("command")
-  end
-
-  if string.match(mode, "^[irRt]") then
-    return utils.get_modehl_name("insert")
-  end
-
-  return mode
+  return hl_name, utils.create_hl(utils.reverse_hl(hl_name))
 end
 
 return utils
