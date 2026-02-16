@@ -207,28 +207,30 @@ end
 
 ---@param mode string
 ---@return string
+---@return string
 function utils.get_modehl_name(mode)
-  return "@lylla." .. mode
+  return "@lylla." .. mode, string.format("@lylla.%s.rev", mode)
 end
 
 ---@return string
+---@return string
 function utils.get_modehl()
   local mode = vim.api.nvim_get_mode().mode
-  local hl_name = utils.get_modehl_name("normal")
+  local modename = "normal"
 
   if string.match(mode, "^[vVs]") then
-    hl_name = utils.get_modehl_name("visual")
+    modename = "visual"
   elseif string.match(mode, "^c") then
-    hl_name = utils.get_modehl_name("command")
+    modename = "command"
   elseif string.match(mode, "^[it]") then
-    hl_name = utils.get_modehl_name("insert")
+    modename = "insert"
   elseif string.match(mode, "^[rR]") then
-    hl_name = utils.get_modehl_name("replace")
+    modename = "replace"
   elseif string.match(mode, "^%ao") then
-    hl_name = utils.get_modehl_name("operator")
+    modename = "operator"
   end
 
-  return hl_name, utils.create_hl(utils.reverse_hl(hl_name))
+  return utils.get_modehl_name(modename)
 end
 
 return utils

@@ -32,24 +32,22 @@ end
 
 function M.inithls()
   vim.iter(pairs(default_hls)):each(function(mode, defaulthl)
-    local name = utils.get_modehl_name(mode)
-
     local hl = config.get().hls[mode]
+    local name, revname = utils.get_modehl_name(mode)
     if hl then
       vim.api.nvim_set_hl(0, name, hl)
-      return
-    end
-
-    if vim.tbl_isempty(vim.api.nvim_get_hl(0, { name = name })) then
+    elseif vim.tbl_isempty(vim.api.nvim_get_hl(0, { name = name })) then
       vim.api.nvim_set_hl(0, name, defaulthl)
     end
+    vim.api.nvim_set_hl(0, revname, utils.reverse_hl(name))
   end)
 end
 
 function M.resethl()
   vim.iter(pairs(default_hls)):each(function(mode, _)
-    local name = utils.get_modehl_name(mode)
+    local name, revname = utils.get_modehl_name(mode)
     vim.api.nvim_set_hl(0, name, {})
+    vim.api.nvim_set_hl(0, revname, {})
   end)
 end
 
