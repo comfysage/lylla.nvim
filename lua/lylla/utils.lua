@@ -216,12 +216,16 @@ function utils.get_modehl()
   local mode = vim.api.nvim_get_mode().mode
   local hl_name = utils.get_modehl_name("normal")
 
-  if string.match(mode, "^[vVs]") then
+  if string.match(mode, "^[vVs]") then
     hl_name = utils.get_modehl_name("visual")
   elseif string.match(mode, "^c") then
     hl_name = utils.get_modehl_name("command")
-  elseif string.match(mode, "^[irRt]") then
+  elseif string.match(mode, "^[it]") then
     hl_name = utils.get_modehl_name("insert")
+  elseif string.match(mode, "^[rR]") then
+    hl_name = utils.get_modehl_name("replace")
+  elseif string.match(mode, "^%ao") then
+    hl_name = utils.get_modehl_name("operator")
   end
 
   return hl_name, utils.create_hl(utils.reverse_hl(hl_name))

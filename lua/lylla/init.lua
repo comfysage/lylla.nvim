@@ -14,12 +14,14 @@ end
 local config = lzrq("lylla.config")
 local utils = lzrq("lylla.utils")
 
----@type table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
+---@type table<'normal'|'visual'|'command'|'insert'|'replace'|'operator', vim.api.keyset.highlight>
 local default_hls = {
   normal = { link = "@property" },
   visual = { link = "@constant" },
   command = { link = "@function" },
   insert = { link = "@variable" },
+  replace = { link = "@type" },
+  operator = { link = "NonText" },
 }
 
 ---@param cfg? lylla.config

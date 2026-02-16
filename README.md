@@ -117,6 +117,8 @@ some nice highlights that i personally use:
       visual = { link = "MiniIconsPurple" },
       command = { link = "MiniIconsOrange" },
       insert = { link = "MiniIconsGrey" },
+      replace = { link = "MiniIconsGrey" },
+      operator = { link = "NonText" },
     },
 ```
 

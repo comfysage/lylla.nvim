@@ -8,7 +8,7 @@
 
 ---@class lylla.config
 ---@field refresh_rate integer
----@field hls table<'normal'|'visual'|'command'|'insert', vim.api.keyset.highlight>
+---@field hls table<'normal'|'visual'|'command'|'insert'|'replace'|'operator', vim.api.keyset.highlight>
 ---@field modules (lylla.item|lylla.item.tuple|string)[]
 ---@field winbar any[]
 ---@field tabline (fun(): (lylla.item|lylla.item.tuple|string)[])|vim.NIL
