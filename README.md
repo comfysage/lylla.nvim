@@ -207,18 +207,18 @@ example: only show diagnostics if `vim.diagnostic` is loaded:
 
 ### lsp information
 
-lylla utils has a builtin helper for getting the current lsp client.
+lylla components has a builtin helper for getting the current lsp client.
 
 ```lua
-local utils = require("lylla.utils")
+local components = require("lylla.components")
 
 {
   lylla.component(function()
-    local client = utils.get_client()
-    return client and {
+    local clients = components.lsp_clients()
+    return clients and {
       { { "lsp :: " }, { client } },
     }
-  end, { events = { "FileType" } }),
+  end, { events = { "FileType", "LspAttach" } }),
 }
 ```
 
