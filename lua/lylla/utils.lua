@@ -139,6 +139,7 @@ function utils.getfilename()
   if vim.bo.buftype ~= "" then
     local filetype = vim.bo.filetype
     file_icon_raw, file_icon_hl = require("mini.icons").get("filetype", filetype)
+    name = string.format("(%s)", vim.bo.filetype)
   else
     file_icon_raw, file_icon_hl = require("mini.icons").get("file", name)
   end
@@ -147,6 +148,10 @@ function utils.getfilename()
 end
 
 function utils.getfilepath()
+  if vim.bo.buftype ~= "" then
+    return {}
+  end
+
   local path = vim.fn.expand("%:p:~:.")
 
   local file_path_list = {}
