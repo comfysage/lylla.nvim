@@ -250,3 +250,19 @@ winbar = {
   end),
 },
 ```
+
+### tabline
+
+similarly, the tabline can be configured with the help of the `lylla.tabline` module:
+
+```lua
+local H = require('lylla.tabline')
+
+tabline = function()
+    return H.fortabs(function(tabidx, t_iscurrent)
+        return {
+            { string.format(" %d "), t_iscurrent and "TabLineSel" or "TabLine" },
+        }
+    end)
+end
+```
