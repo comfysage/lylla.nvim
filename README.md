@@ -207,6 +207,23 @@ example: only show diagnostics if `vim.diagnostic` is loaded:
 }
 ```
 
+### sections
+
+modules can handle different highlights for a section. ~ highlights inside will inherit the background color.
+
+```lua
+{
+  lylla.component(function()
+    return {
+      { section = "CursorLine" }, -- highlights after this will inherit the CursorLine bg
+      { "meow", "Title" },
+      { " :3", "Constant" },
+      { section = false }, -- denotes the end of a section
+    }
+  end)
+}
+```
+
 ### lsp information
 
 lylla components has a builtin helper for getting the current lsp client.
