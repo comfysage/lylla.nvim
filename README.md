@@ -107,6 +107,8 @@ require("lylla").setup({
 
 ### example configuration
 
+for a fully fletched example, look at my personal config: [`config/lylla.lua`](https://codeberg.org/comfysage/ivy/src/commit/bf572e5b6c73d6f0021956b28ec55667c272f6fa/config/config/lylla.lua).
+
 #### use `mini.icons` for colors
 
 some nice highlights that i personally use:
