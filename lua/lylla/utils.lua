@@ -42,16 +42,16 @@ local sfmt = "%s%%*%s"
 local sfmt_inherit = "%s%s"
 -- str, hl_name, text
 local hlfmt = "%s%%#%s#%s"
-local hlfmt_inherit = "%s%%$%s$%s"
+local hlfmt_inherit = "%s%%$%s$%s%%#%s#"
 
 ---@param str string
 ---@param text string
----@param inherit boolean
+---@param inherit string|false
 ---@param hl? string
 ---@return string
 local function strfmt(str, text, inherit, hl)
   if hl then
-    return string.format(inherit and hlfmt_inherit or hlfmt, str, hl, text)
+    return string.format(inherit and hlfmt_inherit or hlfmt, str, hl, text, inherit or nil)
   end
   return string.format(inherit and sfmt_inherit or sfmt, str, text)
 end
@@ -63,9 +63,8 @@ function utils.fold(lst)
   ---@type string|false
   local section = false
   return vim.iter(ipairs(lst)):fold("", function(str, _, module)
-    local inherit = not not section
     if type(module) == "string" and #module > 0 then
-      return strfmt(str, module, inherit)
+      return strfmt(str, module, section)
     end
     if type(module) ~= "table" then
       return str
@@ -83,23 +82,20 @@ function utils.fold(lst)
     end
     local hl = module[2]
     if not hl then
-      return strfmt(str, text, inherit)
+      return strfmt(str, text, section)
     end
     if type(hl) == "string" and #hl > 0 then
-      return strfmt(str, text, inherit, hl)
+      return strfmt(str, text, section, hl)
     elseif type(hl) == "table" and (hl.fg or hl.bg or hl.link) then
-      inherit = inherit or hl.inherit
+      local inherit = section or hl.inherit
       hl.inherit = nil
-      local hl_name = hl.link
-      if not hl_name then
-        hl_name = utils.create_hl(hl)
-      end
+      local hl_name = hl.link or utils.create_hl(hl)
       return strfmt(str, text, inherit, hl_name)
     elseif type(hl) == "table" and hl.inherit then
-      return strfmt(str, text, true)
+      return strfmt(str, text, hl.inherit)
     end
 
-    return strfmt(str, text, inherit)
+    return strfmt(str, text, section)
   end)
 end
 
