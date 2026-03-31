@@ -99,15 +99,19 @@ function utils.fold(lst)
   end)
 end
 
----@param hl_name string
+---@param hl string|vim.api.keyset.highlight name or keyset
 ---@return vim.api.keyset.highlight
-function utils.reverse_hl(hl_name)
-  local hl = vim.api.nvim_get_hl(0, { name = hl_name })
+function utils.reverse_hl(hl)
+  if type(hl) == "string" then
+    ---@diagnostic disable-next-line: cast-local-type
+    hl = vim.api.nvim_get_hl(0, { name = hl })
+  end
+
   if vim.tbl_isempty(hl) or (not hl.fg and not hl.bg and not hl.link) then
     return {}
   end
   if hl.link then
-    return utils.reverse_hl(hl.link)
+    return utils.reverse_hl(hl.link --[[@as string]])
   end
   local rev = vim.deepcopy(hl)
   rev.fg = hl.bg
