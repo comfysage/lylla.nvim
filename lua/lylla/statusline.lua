@@ -43,7 +43,7 @@ function statusline:init()
     self:refresh()
   end)
 
-  self.refreshau = vim.api.nvim_create_augroup(("lylla:refresh[%d]"):format(self.win), { clear = true })
+  self.refreshau = vim.api.nvim_create_augroup(("@lylla.refresh.%d"):format(self.win), { clear = true })
 
   local events = self:getevents()
 
