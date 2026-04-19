@@ -104,7 +104,7 @@ end
 function utils.reverse_hl(hl)
   if type(hl) == "string" then
     ---@diagnostic disable-next-line: cast-local-type
-    hl = vim.api.nvim_get_hl(0, { name = hl })
+    hl = vim.api.nvim_get_hl(0, { name = hl, link = false })
   end
 
   if vim.tbl_isempty(hl) or (not hl.fg and not hl.bg and not hl.link) then
