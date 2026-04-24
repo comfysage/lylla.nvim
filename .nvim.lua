@@ -5,6 +5,6 @@ end
 
 vim.opt.rtp:prepend(".")
 
---
+R('lylla')
 
-R("lylla.init")
+vim.cmd([[ runtime plugin/lylla.lua ]])
