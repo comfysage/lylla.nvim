@@ -13,8 +13,8 @@ local statusline = {}
 statusline.wins = {}
 
 ---@class lylla.proto
----@field new fun(self, win): lylla.proto
-function statusline:new(win)
+---@field new fun(win: integer): lylla.proto
+function statusline.new(win)
   if statusline.wins[win] then
     statusline.wins[win]:close()
   end
@@ -28,8 +28,23 @@ function statusline:new(win)
 end
 
 ---@class lylla.proto
+---@field try_new fun(win: integer?): lylla.proto
+function statusline.try_new(win)
+  win = win or vim.api.nvim_get_current_win()
+
+  if statusline.wins[win] then
+    return statusline.wins[win]
+  end
+  return statusline.new(win)
+end
+
+---@class lylla.proto
 ---@field init fun(self)
 function statusline:init()
+  if self.initialized then
+    return
+  end
+
   local err, err_kind
   ---@diagnostic disable-next-line: assign-type-mismatch
   self.timer, err, err_kind = vim.uv.new_timer()
@@ -58,6 +73,8 @@ function statusline:init()
       end,
     })
   end
+
+  self.initialized = true
 end
 
 ---@class lylla.proto
