@@ -70,13 +70,12 @@ local function init()
     require("lylla.tabline").setup()
   end
 
-  vim.api.nvim_create_autocmd("ColorScheme", {
+  vim.api.nvim_create_autocmd({ "UIEnter", "ColorScheme" }, {
     group = vim.api.nvim_create_augroup("@lylla.hls", { clear = true }),
     callback = function()
       inithls()
     end,
   })
-  inithls()
 end
 
 if vim.v.vim_did_enter > 0 then
