@@ -56,6 +56,7 @@ local function init()
   vim.api.nvim_create_autocmd("WinClosed", {
     group = vim.api.nvim_create_augroup("@lylla.close", { clear = true }),
     callback = function(ev)
+      ---@cast ev +{match: integer}
       local stl = require("lylla.statusline").wins[ev.match]
       if stl then
         stl:close()

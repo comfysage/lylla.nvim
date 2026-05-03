@@ -8,7 +8,7 @@ local function getdebuginfo()
   local i = 3
   local info = debug.getinfo(i, "nSf")
   local nextinfo = debug.getinfo(i + 1, "n")
-  while nextinfo and info.name == nil do
+  while nextinfo and info and info.name == nil do
     info = nextinfo
     i = i + 1
     nextinfo = debug.getinfo(i + 1, "n")

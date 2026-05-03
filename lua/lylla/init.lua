@@ -10,6 +10,7 @@ local config = lzrq("lylla.config")
 
 ---@param cfg? lylla.config
 function M.setup(cfg)
+  ---@diagnostic disable-next-line: assign-type-mismatch
   cfg = cfg or {}
   config.set(config.override(cfg))
 end

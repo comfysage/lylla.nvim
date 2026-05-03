@@ -1,18 +1,19 @@
 local log = require("lylla.log")
 local utils = require("lylla.utils")
 
----@class lylla.proto
----@field wins table<integer, table>
+---@class (partial) lylla.proto
+---@field wins table<integer, lylla.proto>
 ---@field win integer
 ---@field modules any[]
 ---@field winbar any[]
+---@field initialized boolean?
 ---@field timer uv.uv_timer_t
 ---@field refreshau integer
 local statusline = {}
 
 statusline.wins = {}
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field new fun(win: integer): lylla.proto
 function statusline.new(win)
   if statusline.wins[win] then
@@ -27,7 +28,7 @@ function statusline.new(win)
   return stl
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field try_new fun(win: integer?): lylla.proto
 function statusline.try_new(win)
   win = win or vim.api.nvim_get_current_win()
@@ -38,7 +39,7 @@ function statusline.try_new(win)
   return statusline.new(win)
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field init fun(self)
 function statusline:init()
   if self.initialized then
@@ -49,7 +50,7 @@ function statusline:init()
   ---@diagnostic disable-next-line: assign-type-mismatch
   self.timer, err, err_kind = vim.uv.new_timer()
   if not self.timer or err then
-    vim.api.nvim_echo({ { err_kind }, { "\n\t" }, { err } }, true, { err = true })
+    vim.notify(string.format("%s\n\t%s", err_kind, err), vim.log.levels.ERROR)
     return
   end
 
@@ -65,19 +66,22 @@ function statusline:init()
   for i = 1, #events do
     local event = events[i]
     local eventname, eventpattern = unpack(vim.split(event, " "), 1, 2)
-    vim.api.nvim_create_autocmd(eventname, {
-      group = self.refreshau,
-      pattern = eventpattern,
-      callback = function(ev)
-        self:refresh(ev)
-      end,
-    })
+    ---@cast eventname vim.api.keyset.events?
+    if eventname then
+      vim.api.nvim_create_autocmd(eventname, {
+        group = self.refreshau,
+        pattern = eventpattern,
+        callback = function(ev)
+          self:refresh(ev)
+        end,
+      })
+    end
   end
 
   self.initialized = true
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field close fun(self)
 function statusline:close()
   self.timer:stop()
@@ -86,7 +90,7 @@ function statusline:close()
   statusline.wins[self.win] = nil
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field getevents fun(self): string[]
 function statusline:getevents()
   local t = vim.iter(ipairs(self.modules)):fold({}, function(acc, _, module)
@@ -113,7 +117,7 @@ local function refreshcomponent(self, fn, ev)
   end
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field refresh fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:refresh(ev)
   vim.schedule(function()
@@ -126,9 +130,9 @@ function statusline:refresh(ev)
   end)
 end
 
----@class lylla.proto
----@field fold fun(self, ev?: vim.api.keyset.create_autocmd.callback_args, modules: any[]): string
-function statusline:fold(ev, modules)
+---@class (partial) lylla.proto
+---@field fold fun(ev?: vim.api.keyset.create_autocmd.callback_args, modules: any[]): string
+function statusline.fold(ev, modules)
   if type(modules) ~= "table" or modules == nil then
     return ""
   end
@@ -169,19 +173,19 @@ function statusline:fold(ev, modules)
   return utils.fold(lst)
 end
 
----@class lylla.proto
----@field get fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
+---@class (partial) lylla.proto
+---@field get fun(self, ev?: vim.api.keyset.create_autocmd.callback_args): string
 function statusline:get(ev)
-  return self:fold(ev, self.modules)
+  return self.fold(ev, self.modules)
 end
 
----@class lylla.proto
----@field getwinbar fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
+---@class (partial) lylla.proto
+---@field getwinbar fun(self, ev?: vim.api.keyset.create_autocmd.callback_args): string
 function statusline:getwinbar(ev)
-  return self:fold(ev, self.winbar)
+  return self.fold(ev, self.winbar)
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field setwinbar fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:setwinbar(ev)
   local buf = vim.api.nvim_win_get_buf(self.win)
@@ -193,17 +197,19 @@ function statusline:setwinbar(ev)
     return self:getwinbar(ev)
   end)
   assert(ok, string.format("error occured while trying to evaluate winbar:\n\t%s", result))
+  ---@cast result string
 
   vim.wo[self.win].winbar = result
 end
 
----@class lylla.proto
+---@class (partial) lylla.proto
 ---@field set fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:set(ev)
   local ok, result = pcall(vim.api.nvim_win_call, self.win, function()
     return self:get(ev)
   end)
   assert(ok, string.format("error occured while trying to evaluate statusline:\n\t%s", result))
+  ---@cast result string
 
   vim.wo[self.win].statusline = result
 end
