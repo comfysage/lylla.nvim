@@ -132,27 +132,35 @@ end
 function utils.getfilename()
   local _, default_file_hl = require("mini.icons").get("default", "file")
 
-  local name = vim.fn.expand("%:t")
+  local bufname = vim.api.nvim_buf_get_name(0)
+  local name = vim.fs.basename(bufname)
 
   local file_icon_raw, file_icon_hl
 
-  if vim.bo.buftype ~= "" then
+  local buftype = vim.bo.buftype
+  if buftype == "" or buftype == "nowrite" then
+    local stat = vim.uv.fs_stat(bufname)
+    local type_ = stat and stat.type == "directory" and "directory" or "file"
+    file_icon_raw, file_icon_hl = require("mini.icons").get(type_, name)
+  elseif buftype == "nofile" or buftype == "acwrite" then
     local filetype = vim.bo.filetype
     file_icon_raw, file_icon_hl = require("mini.icons").get("filetype", filetype)
-    name = string.format("(%s)", vim.bo.filetype)
+    name = string.format("(%s)", filetype)
   else
-    file_icon_raw, file_icon_hl = require("mini.icons").get("file", name)
+    name = string.format("(%s)", buftype)
+    return { { name, default_file_hl } }
   end
 
   return { { name, default_file_hl }, { " " }, { file_icon_raw, file_icon_hl } }
 end
 
 function utils.getfilepath()
-  if vim.bo.buftype ~= "" then
+  if vim.bo.buftype ~= "" and vim.bo.buftype ~= "nowrite" then
     return {}
   end
 
-  local path = vim.fn.expand("%:p:~:.")
+  local bufname = vim.api.nvim_buf_get_name(0)
+  local path = vim.fn.fnamemodify(bufname, ":p:~:.")
 
   local file_path_list = {}
   local _ = string.gsub(path, "[^/]+", function(w)

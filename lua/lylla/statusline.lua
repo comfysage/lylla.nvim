@@ -189,7 +189,7 @@ end
 ---@field setwinbar fun(self, ev?: vim.api.keyset.create_autocmd.callback_args)
 function statusline:setwinbar(ev)
   local buf = vim.api.nvim_win_get_buf(self.win)
-  if vim.bo[buf].buftype ~= "" then
+  if vim.bo[buf].buftype ~= "" and vim.bo[buf].buftype ~= "nowrite" then
     return
   end
 
