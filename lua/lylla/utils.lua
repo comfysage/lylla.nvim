@@ -51,11 +51,19 @@ local hlfmt_inherit = "%s%%$%s$%s%%#%s#"
 ---@return string
 local function strfmt(str, text, inherit, hl)
   if hl then
-    return string.format(inherit and hlfmt_inherit or hlfmt, str, hl, text, inherit or nil)
+    return string.format(
+      inherit and hlfmt_inherit or hlfmt,
+      str,
+      hl,
+      text,
+      inherit or nil
+    )
   end
   return string.format(inherit and sfmt_inherit or sfmt, str, text)
 end
 
+---@param lst any[]
+---@return string
 function utils.fold(lst)
   vim.validate("lst", lst, "table")
 
@@ -69,7 +77,10 @@ function utils.fold(lst)
     if type(module) ~= "table" then
       return str
     end
-    if module.section ~= nil and (type(module.section) == "string" or module.section == false) then
+    if
+      module.section ~= nil
+      and (type(module.section) == "string" or module.section == false)
+    then
       section = module.section
       if section then
         return string.format("%s%%#%s#", str, module.section)
@@ -99,7 +110,7 @@ function utils.fold(lst)
   end)
 end
 
----@param hl string|vim.api.keyset.highlight name or keyset
+---@param hl string|vim.api.keyset.highlight|vim.api.keyset.get_hl_info name or keyset
 ---@return vim.api.keyset.highlight
 function utils.reverse_hl(hl)
   if type(hl) == "string" then
@@ -144,7 +155,8 @@ function utils.getfilename()
     file_icon_raw, file_icon_hl = require("mini.icons").get(type_, name)
   elseif buftype == "nofile" or buftype == "acwrite" then
     local filetype = vim.bo.filetype
-    file_icon_raw, file_icon_hl = require("mini.icons").get("filetype", filetype)
+    file_icon_raw, file_icon_hl =
+      require("mini.icons").get("filetype", filetype)
     name = string.format("(%s)", filetype)
   else
     name = string.format("(%s)", buftype)
@@ -167,13 +179,15 @@ function utils.getfilepath()
     table.insert(file_path_list, w)
   end)
 
-  local filepath = vim.iter(ipairs(file_path_list)):fold("", function(acc, i, fragment)
-    if i == #file_path_list then
+  local filepath = vim
+    .iter(ipairs(file_path_list))
+    :fold("", function(acc, i, fragment)
+      if i == #file_path_list then
+        return acc
+      end
+      acc = acc .. fragment .. "/"
       return acc
-    end
-    acc = acc .. fragment .. "/"
-    return acc
-  end)
+    end)
 
   return { filepath, "Directory" }
 end
@@ -201,7 +215,11 @@ function utils.get_searchcount()
   end
   display = display or string.format("[%d/%d]", result.current, result.total)
 
-  return { { string.format("/%s", term), "IncSearch" }, { " " }, { display, "MsgSeparator" } }
+  return {
+    { string.format("/%s", term), "IncSearch" },
+    { " " },
+    { display, "MsgSeparator" },
+  }
 end
 
 ---@param mode string

@@ -22,6 +22,7 @@ M.default = {
   refresh_rate = 300,
   hls = {},
   modules = {
+    "meow",
     "%<%f %h%w%m%r",
     "%=",
     {

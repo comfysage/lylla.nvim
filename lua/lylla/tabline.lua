@@ -11,7 +11,7 @@ end
 
 local M, H = {}, {}
 
-M.setup = function()
+M.init = function()
   vim.o.tabline = "%!v:lua.vim.g.tablinefn()"
 end
 

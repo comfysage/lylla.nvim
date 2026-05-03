@@ -45,35 +45,49 @@ end
 
 -- init =======================================================================
 
+local group = vim.api.nvim_create_augroup("@lylla", { clear = true })
+
+vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
+  group = group,
+  callback = function()
+    require("lylla.statusline").try_new()
+  end,
+})
+
+vim.api.nvim_create_autocmd("WinClosed", {
+  group = group,
+  callback = function(ev)
+    ---@cast ev +{match: integer}
+    local stl = require("lylla.statusline").wins[ev.match]
+    if stl then
+      stl:close()
+    end
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "UIEnter", "ColorScheme" }, {
+  group = group,
+  callback = function()
+    inithls()
+
+    require("lylla").refresh(true)
+  end,
+})
+
 local function init()
-  vim.api.nvim_create_autocmd({ "UIEnter", "WinNew", "WinEnter" }, {
-    group = vim.api.nvim_create_augroup("@lylla.win", { clear = true }),
-    callback = function()
-      require("lylla.statusline").try_new():init()
-    end,
-  })
+  require("lylla").init()
 
-  vim.api.nvim_create_autocmd("WinClosed", {
-    group = vim.api.nvim_create_augroup("@lylla.close", { clear = true }),
-    callback = function(ev)
-      ---@cast ev +{match: integer}
-      local stl = require("lylla.statusline").wins[ev.match]
-      if stl then
-        stl:close()
-      end
-    end,
-  })
-
-  if config.get().tabline ~= vim.NIL then
-    require("lylla.tabline").setup()
+  local wins = vim.api.nvim_list_wins()
+  for _, win in ipairs(wins) do
+    if vim.api.nvim_win_is_valid(win) then
+      require("lylla.statusline").try_new(win)
+    end
   end
 
-  vim.api.nvim_create_autocmd({ "UIEnter", "ColorScheme" }, {
-    group = vim.api.nvim_create_augroup("@lylla.hls", { clear = true }),
-    callback = function()
-      inithls()
-    end,
-  })
+  if config.get().tabline ~= vim.NIL then
+    ---@diagnostic disable-next-line: undefined-field
+    require("lylla.tabline").init()
+  end
 end
 
 if vim.v.vim_did_enter > 0 then
