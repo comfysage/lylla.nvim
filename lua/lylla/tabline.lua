@@ -17,47 +17,48 @@ end
 
 -- helpers ====================================================================
 
+--- 0-indexed range interator
+---@overload fun(i: integer, j: integer): Iter
+---@overload fun(j: integer): Iter
+function H.range(...)
+  local args = { ... }
+
+  local i, j
+  if #args == 1 then
+    i, j = 0, args[1]
+  else
+    i, j = args[1], args[2]
+  end
+
+  return vim.iter(setmetatable({
+    idx = i,
+  }, {
+    __call = function(t)
+      local index = t.idx + 1
+      if index > j then
+        return
+      end
+      t.idx = index
+      return t.idx
+    end,
+  }))
+end
+
 function H.fortabwins(tabn, f)
   local buflist = vim.fn.tabpagebuflist(tabn)
 
-  return vim
-    .iter(setmetatable({
-      idx = 0,
-    }, {
-      __call = function(t)
-        local i = t.idx + 1
-        if i > vim.fn.tabpagewinnr(tabn, "$") then
-          return
-        end
-        t.idx = i
-        return t.idx
-      end,
-    }))
-    :fold({}, function(t, i)
-      local buf = buflist[i]
-      table.insert(t, { f(i, i == vim.fn.tabpagewinnr(tabn), buf) })
-      return t
-    end)
+  return H.range(vim.fn.tabpagewinnr(tabn, "$")):fold({}, function(t, i)
+    local buf = buflist[i]
+    table.insert(t, { f(i, i == vim.fn.tabpagewinnr(tabn), buf) })
+    return t
+  end)
 end
 
 function H.fortabs(f)
-  return vim
-    .iter(setmetatable({
-      idx = 0,
-    }, {
-      __call = function(t)
-        local i = t.idx + 1
-        if i > vim.fn.tabpagenr("$") then
-          return
-        end
-        t.idx = i
-        return t.idx
-      end,
-    }))
-    :fold({}, function(t, i)
-      table.insert(t, { f(i, i == vim.fn.tabpagenr()) })
-      return t
-    end)
+  return H.range(vim.fn.tabpagenr("$")):fold({}, function(t, i)
+    table.insert(t, { f(i, i == vim.fn.tabpagenr()) })
+    return t
+  end)
 end
 
 return vim.defaulttable(function(k)
