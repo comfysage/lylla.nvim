@@ -38,28 +38,26 @@ function utils.flatten(lst, maxdepth)
   return result
 end
 
-local sfmt = "%s%%*%s"
-local sfmt_inherit = "%s%s"
+local sfmt = "%%*%s"
+local sfmt_inherit = "%s"
 -- str, hl_name, text
-local hlfmt = "%s%%#%s#%s"
-local hlfmt_inherit = "%s%%$%s$%s%%#%s#"
+local hlfmt = "%%#%s#%s"
+local hlfmt_inherit = "%%$%s$%s%%#%s#"
 
----@param str string
 ---@param text string
 ---@param inherit string|false
 ---@param hl? string
 ---@return string
-local function strfmt(str, text, inherit, hl)
+local function strfmt(text, inherit, hl)
   if hl then
     return string.format(
       inherit and hlfmt_inherit or hlfmt,
-      str,
       hl,
       text,
       inherit or nil
     )
   end
-  return string.format(inherit and sfmt_inherit or sfmt, str, text)
+  return string.format(inherit and sfmt_inherit or sfmt, text)
 end
 
 ---@param lst any[]
@@ -70,44 +68,49 @@ function utils.fold(lst)
   lst = utils.flatten(lst, 1)
   ---@type string|false
   local section = false
-  return vim.iter(ipairs(lst)):fold("", function(str, _, module)
-    if type(module) == "string" and #module > 0 then
-      return strfmt(str, module, section)
-    end
-    if type(module) ~= "table" then
-      return str
-    end
-    if
-      module.section ~= nil
-      and (type(module.section) == "string" or module.section == false)
-    then
-      section = module.section
-      if section then
-        return string.format("%s%%#%s#", str, module.section)
+  local l = vim
+    .iter(ipairs(lst))
+    :map(function(_, module)
+      if type(module) == "string" and #module > 0 then
+        return strfmt(module, section)
       end
-      return str
-    end
-    local text = module[1]
-    if text == nil or type(text) ~= "string" or #text == 0 then
-      return str
-    end
-    local hl = module[2]
-    if not hl then
-      return strfmt(str, text, section)
-    end
-    if type(hl) == "string" and #hl > 0 then
-      return strfmt(str, text, section, hl)
-    elseif type(hl) == "table" and (hl.fg or hl.bg or hl.link) then
-      local inherit = section or hl.inherit
-      hl.inherit = nil
-      local hl_name = hl.link or utils.create_hl(hl)
-      return strfmt(str, text, inherit, hl_name)
-    elseif type(hl) == "table" and hl.inherit then
-      return strfmt(str, text, hl.inherit)
-    end
+      if type(module) ~= "table" then
+        return
+      end
+      if
+        module.section ~= nil
+        and (type(module.section) == "string" or module.section == false)
+      then
+        section = module.section
+        if section then
+          return string.format("%%#%s#", module.section)
+        end
+        return
+      end
+      local text = module[1]
+      if text == nil or type(text) ~= "string" or #text == 0 then
+        return
+      end
+      local hl = module[2]
+      if not hl then
+        return strfmt(text, section)
+      end
+      if type(hl) == "string" and #hl > 0 then
+        return strfmt(text, section, hl)
+      elseif type(hl) == "table" and (hl.fg or hl.bg or hl.link) then
+        local inherit = section or hl.inherit
+        hl.inherit = nil
+        local hl_name = hl.link or utils.create_hl(hl)
+        return strfmt(text, inherit, hl_name)
+      elseif type(hl) == "table" and hl.inherit then
+        return strfmt(text, hl.inherit)
+      end
 
-    return strfmt(str, text, section)
-  end)
+      return strfmt(text, section)
+    end)
+    :totable()
+
+  return table.concat(l)
 end
 
 ---@param hl string|vim.api.keyset.highlight|vim.api.keyset.get_hl_info name or keyset
