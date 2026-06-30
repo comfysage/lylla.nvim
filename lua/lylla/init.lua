@@ -1,7 +1,10 @@
-local logger = vim.log.new({
-  name = "lylla",
-  current_level = vim.log.levels.DEBUG,
-})
+---@type vim.Log?
+local logger = vim.log.new
+    and vim.log.new({
+      name = "lylla",
+      current_level = vim.log.levels.DEBUG,
+    })
+  or nil
 
 local lylla = {}
 
@@ -99,7 +102,9 @@ local function refreshcomponent(self, fn, ev)
   do
     local ok, result = pcall(fn, self, ev)
     if not ok then
-      logger.error("error occured on refresh:\n\t" .. result)
+      if logger then
+        logger.error("error occured on refresh:\n\t" .. result)
+      end
     end
   end
 end
